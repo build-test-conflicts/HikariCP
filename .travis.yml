@@ -1,15 +1,27 @@
-language: java
-sudo: false
-cache:
-  directories:
-    - $HOME/.m2/repository
-jdk:
-  - oraclejdk8
 
-install: /bin/true
+sudo: required
+language: java
+
+jdk:
+  - openjdk8
 
 script:
-  - mvn install -Dskip.unit.tests=true -Dmaven.javadoc.skip=true -V -B
-  - mvn clean test coveralls:report -V -P coverage 
-  - jdk_switcher use openjdk7
-  - mvn test
+  - mvn clean compile assembly:single
+
+before_deploy:
+    - mkdir MiningBuild
+    - find . -name '*.jar' -exec cp {} ./MiningBuild \;
+    - cd /home/travis/build/build-test-conflicts/HikariCP/MiningBuild
+    - tar -zcvf result.tar.gz *
+deploy:
+  provider: releases
+  api_key:
+    secure: $GITHUB_TOKEN
+  file: result.tar.gz
+  name: fetchjar-e125d509
+  file_glob: true
+  overwrite: true
+  skip_cleanup: true
+  on:
+    all_branches: true 
+            
